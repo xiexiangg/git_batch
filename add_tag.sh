@@ -46,6 +46,8 @@ function group_tag_arr() {
         for((y=0; y<${#tag_arr[*]}; y++))
         do
             tag=${tag_arr[$y]}
+
+            #字符串对比
             if [[ ${temp} == 0 ]]; then
                 temp=${tag}
             else
@@ -68,7 +70,7 @@ function group_tag_arr() {
             #                index=${y}
             #            fi
             #        fi
-            #字符串对比
+
         done
         unset tag_arr[${index}]
         reserved_arr[$d]=${temp}
@@ -77,7 +79,7 @@ function group_tag_arr() {
     done
 }
 
-function init_local_tag_arr() {
+function init_tag_arr() {
 
     for line in `git tag -l`
     do
@@ -143,7 +145,7 @@ function git_add_tag(){
 
         git pull --tags
 
-        init_local_tag_arr
+        init_tag_arr
 
         if [[ ${valid_version} == true ]];then
             git tag -a ${tag_version} -m ''
