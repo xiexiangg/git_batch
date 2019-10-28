@@ -4,16 +4,18 @@
 #$2 tag_version
 #$3 project_name
 
-x=0;
-d=0;
-hvn=5;
-mark=''
-empty=""
-tag_arr=();
-valid_version=false
-reserved_arr=();
-is_branch=false
-is_checkout=true
+init_params() {
+    x=0;
+    d=0;
+    hvn=5;
+    mark=''
+    empty=""
+    tag_arr=();
+    valid_version=false
+    reserved_arr=();
+    is_branch=false
+    is_checkout=true
+}
 
 del_history_version() {
     valid_version=true
@@ -144,22 +146,23 @@ function git_add_tag(){
         init_local_tag_arr
 
         if [[ ${valid_version} == true ]];then
-        git tag -a ${tag_version} -m ''
+            git tag -a ${tag_version} -m ''
 
-        echo -e "\033[33m push remote tag: <<<${tag_version}>>> ing.. \033[0m"
+            echo -e "\033[33m push remote tag: <<<${tag_version}>>> ing.. \033[0m"
 
-        git push --tags -f
+            git push --tags -f
 
-        echo -e "\033[32m push remote tag: <<<${tag_version}>>> success! \033[0m"
+            echo -e "\033[32m push remote tag: <<<${tag_version}>>> success! \033[0m"
         fi
-
-
+        init_params
         cd ../
 
     else
         echo -e "\033[31m no project!!!<<<${project_name}>>> \033[0m"
     fi
 }
+
+init_params
 
 if [[ ${2} == ${empty} ]];then
     echo -e "\033[31m must be filled in tag version!!! \033[0m"
