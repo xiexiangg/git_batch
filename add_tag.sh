@@ -18,19 +18,18 @@ init_params() {
 }
 
 del_history_version() {
+
     valid_version=true
+
     if [[ ${#tag_arr[*]} > 0 ]];then
 
-        for ((i=0; i<${#tag_arr[*]};i++)) {
-            echo -e "\033[33m start del git tag <<<${tag_arr[$i]}>>> \033[0m"
-            git tag -d ${tag_arr[$i]}
-            git push origin :refs/tags/${tag_arr[$i]}
-            echo -e "\033[33m del success to <<<${tag_arr[$i]}>>> \033[0m"
-        }
-
-        #git tag | grep -Ev "'^$temp'" | xargs git push origin ':refs/tags/'
-        #git tag | grep -Ev "'^$temp'" | xargs git tag -d
-        echo -e "\033[36m del total old_version to <<<${#tag_arr[*]}>>> \033[0m"
+        for del_tag in ${tag_arr[*]};
+        do
+            echo -e "\033[33m start del git tag <<<${del_tag}>>> \033[0m"
+            git tag -d ${del_tag}
+            git push origin :refs/tags/${del_tag}
+            echo -e "\033[36m del success to <<<${del_tag}>>> \033[0m"
+        done
     else
         echo -e "\033[32m no need del fo history tag \033[0m"
     fi
@@ -42,38 +41,19 @@ function group_tag_arr() {
     do
         temp=0
         index=0
-        #v_tag=""
+        v_tag=""
         for((y=0; y<${#tag_arr[*]}; y++))
         do
             tag=${tag_arr[$y]}
-
-            #字符串对比
-            if [[ ${temp} == 0 ]]; then
-                temp=${tag}
-            else
-                if [[ ${temp} < ${tag} ]]; then
-                    temp=${tag}
-                    index=${y}
-                fi
+            tag_number=`echo "${tag}" | tr -cd "[0-9]"`
+            if [[ ${temp} -lt ${tag_number} ]]; then
+                temp=${tag_number}
+                v_tag=${tag}
+                index=${y}
             fi
-            # 数字对比
-            #        tag_number=`echo  "${tag}" | tr -cd "[0-9]" `
-            #        temp_tag=${tag_number}"0000000000";
-            #        tag=${temp_tag:0:10}
-            #        if [[ ${temp} == 0 ]]; then
-            #            temp=${tag}
-            #            v_tag=${tag}
-            #        else
-            #            if [[ ${temp} < ${tag} ]]; then
-            #                temp=${tag}
-            #                v_tag=${tag}
-            #                index=${y}
-            #            fi
-            #        fi
-
         done
         unset tag_arr[${index}]
-        reserved_arr[$d]=${temp}
+        reserved_arr[$d]=${v_tag}
         let d++
         let hvn--
     done
@@ -87,20 +67,24 @@ function init_tag_arr() {
         let x++
     done
 
-    tag=$(git tag | grep "$tag_version")
-
-    if [[ ${tag} != ${empty} ]];then
-        let hvn=5
-    else
-        let hvn=4
-    fi
-
     group_tag_arr
 
-    if [[ ${reserved_arr[0]} > ${tag_version} ]];then
-        echo -e "\033[31m invalid tag version to $tag_version,less than current<<<${reserved_arr[0]}>>> version !!! \033[0m"
+    max_tag_version=`echo "${reserved_arr[0]}" | tr -cd "[0-9]"`
+    cr_version=`echo "${tag_version}" | tr -cd "[0-9]"`
+
+    if [[ ${max_tag_version} == ${cr_version} ]];then
+
+        tag_arr[1000]=${tag_version}
+        hvn=4
+    fi
+
+    if [[ ${max_tag_version} -gt ${cr_version} ]];then
+        echo -e "\033[31m invalid tag version to <<<${tag_version}>>>,less than current<<<${reserved_arr[0]}>>> version !!! \033[0m"
         return
     fi
+    echo ${tag_arr[*]}
+    echo ${reserved_arr[*]}
+
     del_history_version
 }
 
@@ -112,8 +96,7 @@ function git_add_tag(){
 
     if [[ -d ${project_name} ]];then
 
-        echo 'in project --> '${project_name}
-
+        echo -e "\033[33m in project <<<${project_name}>>> \033[0m"
         cd ${project_name}
 
         git fetch
@@ -148,6 +131,7 @@ function git_add_tag(){
         init_tag_arr
 
         if [[ ${valid_version} == true ]];then
+
             git tag -a ${tag_version} -m ''
 
             echo -e "\033[33m push remote tag: <<<${tag_version}>>> ing.. \033[0m"
