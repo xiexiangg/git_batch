@@ -82,8 +82,6 @@ function init_tag_arr() {
         echo -e "\033[31m invalid tag version to <<<${tag_version}>>>,less than current<<<${reserved_arr[0]}>>> version !!! \033[0m"
         return
     fi
-    echo ${tag_arr[*]}
-    echo ${reserved_arr[*]}
 
     del_history_version
 }
