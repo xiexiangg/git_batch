@@ -5,16 +5,17 @@
 #$3 project_name
 
 init_params() {
-    x=0;
-    d=0;
-    hvn=5;
+    x=0
+    d=0
+    hvn=5
     mark=''
-    empty=""
-    tag_arr=();
+    empty=''
+    tag_arr=()
     valid_version=false
-    reserved_arr=();
+    reserved_arr=()
     is_branch=false
     is_checkout=true
+    max_tag_version_number=0
 }
 
 del_history_version() {
@@ -35,25 +36,59 @@ del_history_version() {
     fi
 }
 
+function get_max_compare_version() {
+    v1=${1}
+    v2=${2}
+    v1_array=(${v1//./ })
+    v2_array=(${v2//./ })
+    len=$((${#v1_array[*]} > ${#v2_array[*]} ? ${#v1_array[*]} : ${#v2_array[*]}))
+
+    if [[ ${#v1} == ${#v2} ]];then
+
+        if [[ ${v1} == ${v2} ]];then
+            echo 1
+        elif [[ ${v1} > ${v2} ]];then
+            echo 1
+        else
+            echo 0
+        fi
+    else
+        for((i=0; i<${len}; i++))
+        do
+            v1_arr_number=`get_string_number ${v1_array[i]}`
+            v2_arr_number=`get_string_number ${v2_array[i]}`
+
+            if [[ ${v1_arr_number} -gt ${v2_arr_number} ]];then
+                echo 1;break
+            fi
+
+            if [[ ${v1_arr_number} -lt ${v2_arr_number} ]];then
+                echo 0;break
+            fi
+        done
+    fi
+}
+
+function get_string_number() {
+    echo `echo "${1}" | tr -cd "[0-9]"`
+}
+
 function group_tag_arr() {
 
     while [[ ${hvn} -gt 0 ]]
     do
         temp=0
         index=0
-        v_tag=""
         for((y=0; y<${#tag_arr[*]}; y++))
         do
             tag=${tag_arr[$y]}
-            tag_number=`echo "${tag}" | tr -cd "[0-9]"`
-            if [[ ${temp} -lt ${tag_number} ]]; then
-                temp=${tag_number}
-                v_tag=${tag}
+            if [[ `get_max_compare_version ${temp} ${tag}` -eq 0 ]]; then
+                temp=${tag}
                 index=${y}
             fi
         done
         unset tag_arr[${index}]
-        reserved_arr[$d]=${v_tag}
+        reserved_arr[$d]=${temp}
         let d++
         let hvn--
     done
@@ -69,20 +104,16 @@ function init_tag_arr() {
 
     group_tag_arr
 
-    max_tag_version=`echo "${reserved_arr[0]}" | tr -cd "[0-9]"`
-    cr_version=`echo "${tag_version}" | tr -cd "[0-9]"`
+    if [[ ${reserved_arr[0]} == ${tag_version} ]];then
 
-    if [[ ${max_tag_version} == ${cr_version} ]];then
-
-        tag_arr[1000]=${tag_version}
         hvn=4
+        tag_arr[1000]=${tag_version}
+    else
+        if [[ `get_max_compare_version ${reserved_arr[0]} ${tag_version}` -eq 1 ]];then
+            echo -e "\033[31m invalid tag version to <<<${tag_version}>>>,less than current<<<${reserved_arr[0]}>>> version !!! \033[0m"
+            return
+        fi
     fi
-
-    if [[ ${max_tag_version} -gt ${cr_version} ]];then
-        echo -e "\033[31m invalid tag version to <<<${tag_version}>>>,less than current<<<${reserved_arr[0]}>>> version !!! \033[0m"
-        return
-    fi
-
     del_history_version
 }
 
@@ -153,7 +184,7 @@ if [[ ${2} == ${empty} ]];then
     return
 fi
 
-if [[ ${3} != "$empty" ]];then
+if [[ ${3} != ${empty} ]];then
 
     git_add_tag $1 $2 $3
 

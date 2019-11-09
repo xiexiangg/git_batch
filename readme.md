@@ -28,4 +28,6 @@ sh add_tag.sh branch_name tag_version
 
 sh add_tag.sh branch_name tag_version project_name
 
+默认保留本地 & 远程 包含当前5个版本
+
 
