@@ -127,7 +127,7 @@ function git_add_tag(){
 
         echo -e "\033[33m in project <<<${project_name}>>> \033[0m"
         cd ${project_name}
-
+        git tag | xargs git tag -d
         git fetch
 
         for branch in `git branch -r`
