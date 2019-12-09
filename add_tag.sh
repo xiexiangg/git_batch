@@ -43,14 +43,22 @@ function get_max_compare_version() {
     v2_array=(${v2//./ })
     len=$((${#v1_array[*]} > ${#v2_array[*]} ? ${#v1_array[*]} : ${#v2_array[*]}))
 
-    if [[ ${#v1} == ${#v2} ]];then
+    if [[ ${#v1} == 0 ]];then
+        echo 2
+        return
+    fi
 
+    if [[ ${#v2} == 0 ]];then
+        echo 1
+        return
+    fi
+    if [[ ${#v1} == ${#v2} ]];then
         if [[ ${v1} == ${v2} ]];then
             echo 1
         elif [[ ${v1} > ${v2} ]];then
             echo 1
         else
-            echo 0
+            echo 2
         fi
     else
         for((i=0; i<${len}; i++))
@@ -63,7 +71,7 @@ function get_max_compare_version() {
             fi
 
             if [[ ${v1_arr_number} -lt ${v2_arr_number} ]];then
-                echo 0;break
+                echo 2;break
             fi
         done
     fi
@@ -74,15 +82,15 @@ function get_string_number() {
 }
 
 function group_tag_arr() {
-
+    len=${#tag_arr[*]};
     while [[ ${hvn} -gt 0 ]]
     do
         temp=0
         index=0
-        for((y=0; y<${#tag_arr[*]}; y++))
+        for((y=0; y<${len}; y++))
         do
             tag=${tag_arr[$y]}
-            if [[ `get_max_compare_version ${temp} ${tag}` -eq 0 ]]; then
+            if [[ `get_max_compare_version ${temp} ${tag}` -eq 2 ]]; then
                 temp=${tag}
                 index=${y}
             fi
@@ -105,8 +113,6 @@ function init_tag_arr() {
     group_tag_arr
 
     if [[ ${reserved_arr[0]} == ${tag_version} ]];then
-
-        hvn=4
         tag_arr[1000]=${tag_version}
     else
         if [[ `get_max_compare_version ${reserved_arr[0]} ${tag_version}` -eq 1 ]];then
@@ -127,6 +133,7 @@ function git_add_tag(){
 
         echo -e "\033[33m in project <<<${project_name}>>> \033[0m"
         cd ${project_name}
+
         git tag | xargs git tag -d
         git fetch
 
